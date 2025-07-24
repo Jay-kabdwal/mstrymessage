@@ -20,7 +20,7 @@ export async function sendVerificationEmail(
       message: "sent verification email",
     };
   } catch (error) {
-    console.log("error sending verification emial", error);
+    console.error("error sending verification emial", error);
 
     return {
       success: false,
