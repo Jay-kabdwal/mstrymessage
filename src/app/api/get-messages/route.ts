@@ -55,10 +55,10 @@ export async function GET(request:Request){
         );
         
     } catch (error) {
-        console.error("notfound")
+        console.error("unable to get messages")
         Response.json({
             success: false,
-            message:"notfound"
+            message:"unable to get messages"
         },{
             status:500
         })
