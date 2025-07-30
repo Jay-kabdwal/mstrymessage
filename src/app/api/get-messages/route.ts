@@ -55,7 +55,7 @@ export async function GET(request:Request){
         );
         
     } catch (error) {
-        console.error("unable to get messages")
+        console.error("unable to get messages",error)
         Response.json({
             success: false,
             message:"unable to get messages"

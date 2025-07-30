@@ -41,7 +41,7 @@ export async function POST(request:Request){
         })
 
     } catch (error) {
-        console.error("unable to send message")
+        console.error("unable to send message",error)
         return Response.json({
             success: false,
             message: 'unable to send message'
