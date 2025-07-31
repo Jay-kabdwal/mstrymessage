@@ -1,15 +1,9 @@
-"use client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import Link from "next/link";
-import { useDebounceValue } from "usehooks-ts";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { signUpSchema } from "@/schemas/signUpSchema";
-import { useForm } from "react-hook-form";
-import axios, { AxiosError } from "axios";
-import { ApiResponse } from "@/types/ApiResponse";
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { signIn } from 'next-auth/react';
 import {
   Form,
   FormField,
@@ -19,69 +13,46 @@ import {
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
+import { signInSchema } from '@/schemas/signInSchema';
 
-const page = () => {
-  const [username, setUsername] = useState("");
-  const [usernameMessage, setUsernameMessage] = useState("");
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const debouncedUsername = useDebounceValue(username, 300);
+export default function SignInForm() {
   const router = useRouter();
 
-  //zod implementation
-  const form = useForm<z.infer<typeof signUpSchema>>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
-      username: "",
-      email: "",
-      password: "",
+      identifier: '',
+      password: '',
     },
   });
 
-  useEffect(() => {
-    const checkUsernameUnique = async () => {
-      if (!debouncedUsername) {
-        setIsCheckingUsername(true);
-        setUsernameMessage("");
-        try {
-          const response = await axios.get(
-            `/api/check-username-unique?username=${debouncedUsername}`
-          );
-          setUsernameMessage(response.data.message);
-        } catch (error) {
-          const axiosError = error as AxiosError<ApiResponse>;
-          setUsernameMessage(
-            axiosError.response?.data.message ?? "error checking username"
-          );
-        } finally {
-          setIsCheckingUsername(false)
-        }
+  const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+    const result = await signIn('credentials', {
+      redirect: false,
+      identifier: data.identifier,
+      password: data.password,
+    });
+
+    if (result?.error) {
+      if (result.error === 'CredentialsSignin') {
+        toast(
+          'Login Failed',{
+          description: 'Incorrect username or password'
+        });
+      } else {
+        toast('Error',{
+          description: result.error,
+        });
       }
     }
-    checkUsernameUnique()
-  }, [debouncedUsername]);
 
-
-  const onSubmit = async (data : z.infer<typeof signUpSchema>) =>{
-    setIsSubmitting(true)
-    try {
-      const response = await axios.post<ApiResponse>('/api/sign-up', data)
-      toast("Success", {
-          description: "response.data.message",
-        })
-        router.replace(`/verify/${username}`)
-        setIsSubmitting(false)
-    } catch (error) {
-      console.error("error in signup of user",error)
-      const axiosError = error as AxiosError<ApiResponse>;
-          let errorMessage = axiosError.response?.data.message
-          toast.error("signup failed", {
-          description: errorMessage,
-        })
-        setIsSubmitting(false)
+    if (result?.url) {
+      router.replace('/dashboard');
     }
-  }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-800">
@@ -95,7 +66,7 @@ const page = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
-              name="email" 
+              name="identifier"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
@@ -129,7 +100,5 @@ const page = () => {
         </div>
       </div>
     </div>
-  )
-};
-
-export default page;
+  );
+}

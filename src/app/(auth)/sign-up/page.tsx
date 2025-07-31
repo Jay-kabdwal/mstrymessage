@@ -1,11 +1,12 @@
+
 'use client';
 
 import { ApiResponse } from '@/types/ApiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form'; 
-import { useDebounceValue } from 'usehooks-ts';
+import { useForm } from 'react-hook-form';
+import { useDebounce } from 'use-debounce';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -27,8 +28,8 @@ export default function SignUpForm() {
   const [username, setUsername] = useState('');
   const [usernameMessage, setUsernameMessage] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); 
-  const debouncedUsername = useDebounceValue(username, 300);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [debouncedUsername] = useDebounce(username, 300);
 
   const router = useRouter();
 
@@ -69,9 +70,10 @@ export default function SignUpForm() {
     try {
       const response = await axios.post<ApiResponse>('/api/sign-up', data);
 
-      toast("Success", {
-          description: "response.data.message",
-        })
+      toast('Success',{
+        description: response.data.message,
+      });
+
       router.replace(`/verify/${username}`);
 
       setIsSubmitting(false);
@@ -84,9 +86,9 @@ export default function SignUpForm() {
       let errorMessage = axiosError.response?.data.message;
       ('There was a problem with your sign-up. Please try again.');
 
-      toast("Sign Up Failed", {
-          description: errorMessage,
-        })
+      toast.error('Sign Up Failed',{
+        description: errorMessage,
+      });
 
       setIsSubmitting(false);
     }
@@ -139,7 +141,7 @@ export default function SignUpForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <Input {...field} name="email" />
-                  <p className=' text-gray-400 text-sm'>We will send you a verification code</p>
+                  <p className="text-gray-400 text-sm">We will send you a verification code</p>
                   <FormMessage />
                 </FormItem>
               )}
